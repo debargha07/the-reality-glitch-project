@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REALITY.EXE</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --red: #ff2244;
+            --cyan: #00ffe7;
+            --yellow: #ffe600;
+            --bg: #050508;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            cursor: crosshair;
+            overflow-x: hidden;
+            font-family: 'Share Tech Mono', monospace;
+            color: #ffffff;
+        }
+
+        /* EFFECT 1: NOISE GRAIN */
+        body::before {
+            content: "";
+            position: fixed;
+            top: -100%;
+            left: -100%;
+            width: 300%;
+            height: 300%;
+            z-index: 9998;
+            pointer-events: none;
+            opacity: 0.04;
+            /* Inline SVG feTurbulence for noise */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            animation: grain 0.15s steps(1) infinite;
+        }
+
+        @keyframes grain {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(2%, -4%); }
+            50% { transform: translate(-3%, 2%); }
+            75% { transform: translate(4%, 3%); }
+        }
+
+        /* EFFECT 2: SCANLINES */
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+            background-image: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.18) 2px,
+                rgba(0, 0, 0, 0.18) 4px
+            );
+            background-size: 100% 4px;
+            animation: scanlines 8s linear infinite;
+        }
+
+        @keyframes scanlines {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 800px; }
+        }
+
+        /* HERO SECTION */
+        #hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            z-index: 1; /* Keep above background effects */
+        }
+
+        /* GLITCH TITLE */
+        .glitch-title {
+            position: relative;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3.5rem, 12vw, 10rem);
+            margin: 0;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+
+        .glitch-title::before,
+        .glitch-title::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0; /* Normally invisible */
+        }
+
+        .glitch-title::before {
+            color: var(--red);
+            clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+            animation: glitchTop 3s infinite steps(1);
+            z-index: -1;
+        }
+
+        .glitch-title::after {
+            color: var(--cyan);
+            clip-path: polygon(0 45%, 100% 45%, 100% 100%, 0 100%);
+            animation: glitchBot 3s infinite steps(1);
+            z-index: -2;
+        }
+
+        /* Flicker at 90-94% */
+        @keyframes glitchTop {
+            0%, 89%, 95%, 100% { opacity: 0; transform: translate(0, 0); }
+            90% { opacity: 1; transform: translate(-4px, -2px); }
+            91% { opacity: 1; transform: translate(4px, 2px); }
+            92% { opacity: 1; transform: translate(-2px, -4px); }
+            93% { opacity: 1; transform: translate(2px, 4px); }
+            94% { opacity: 1; transform: translate(-4px, 2px); }
+        }
+
+        @keyframes glitchBot {
+            0%, 89%, 95%, 100% { opacity: 0; transform: translate(0, 0); }
+            90% { opacity: 1; transform: translate(4px, 2px); }
+            91% { opacity: 1; transform: translate(-4px, -2px); }
+            92% { opacity: 1; transform: translate(2px, 4px); }
+            93% { opacity: 1; transform: translate(-2px, -4px); }
+            94% { opacity: 1; transform: translate(4px, -2px); }
+        }
+
+        /* SUBTITLE */
+        #subtitle {
+            font-family: 'VT323', monospace;
+            font-size: clamp(1.1rem, 3vw, 1.7rem);
+            color: var(--cyan);
+            text-shadow: 0 0 10px var(--cyan);
+            min-height: 2em; /* Prevent layout jump */
+            margin: 0;
+            text-align: center;
+        }
+
+        /* DODGE BUTTON */
+        #dodge-btn {
+            position: fixed;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            background: transparent;
+            border: 2px solid var(--red);
+            color: var(--red);
+            font-family: 'VT323', monospace;
+            font-size: 1.6rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            text-shadow: 0 0 10px var(--red);
+            box-shadow: 0 0 10px var(--red), inset 0 0 10px var(--red);
+            transition: color 0.3s, border-color 0.3s, text-shadow 0.3s, box-shadow 0.3s;
+            outline: none;
+        }
+
+        #dodge-btn.caught {
+            border-color: #00ff00;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+            box-shadow: 0 0 10px #00ff00, inset 0 0 10px #00ff00;
+        }
+
+        .ghost-trail {
+            position: fixed;
+            border: 1px dashed var(--red);
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 99;
+            box-sizing: border-box;
+        }
+
+        /* RGB TEAR LAYERS */
+        .rgb-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+        .layer-red {
+            background: rgba(255, 0, 50, 0.07);
+        }
+        .layer-cyan {
+            background: rgba(0, 255, 231, 0.07);
+        }
+
+        /* REPORT BUTTON */
+        #report-btn {
+            background: transparent;
+            border: 2px solid var(--cyan);
+            color: var(--cyan);
+            font-family: 'VT323', monospace;
+            font-size: 1.6rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            text-shadow: 0 0 10px var(--cyan);
+            box-shadow: 0 0 10px var(--cyan), inset 0 0 10px var(--cyan);
+            transition: all 0.3s;
+            outline: none;
+            z-index: 10;
+        }
+        #report-btn:hover {
+            background: rgba(0, 255, 231, 0.1);
+        }
+
+        /* NOTIFICATION CARD */
+        .notif {
+            position: fixed;
+            width: 280px;
+            background: #0d0d12;
+            border: 1px solid var(--red);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.78rem;
+            color: #e0e0e0;
+            box-shadow: 0 0 20px rgba(255, 34, 68, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+        .notif-header {
+            background: var(--red);
+            color: #000;
+            font-family: 'VT323', monospace;
+            font-size: 1.1rem;
+            padding: 2px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .notif-close {
+            font-size: 1.2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .notif-body {
+            padding: 12px;
+            text-align: left;
+        }
+
+        /* PERMISSION POPUP */
+        .perm-popup {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 340px;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+            font-family: 'Share Tech Mono', monospace;
+            z-index: 9000;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .perm-header {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .perm-list {
+            margin: 0 0 16px 0;
+            padding: 0;
+            list-style: none;
+            font-size: 0.9rem;
+            color: #ddd;
+            text-align: left;
+        }
+        .perm-list li {
+            margin-bottom: 6px;
+        }
+        .perm-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .perm-btn {
+            background: transparent;
+            font-family: 'Share Tech Mono', monospace;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .perm-allow {
+            border: 1px solid var(--cyan);
+            color: var(--cyan);
+            box-shadow: 0 0 8px rgba(0,255,231,0.3);
+        }
+        .perm-allow:hover {
+            background: rgba(0,255,231,0.1);
+            box-shadow: 0 0 12px rgba(0,255,231,0.5);
+        }
+        .perm-block {
+            border: 1px solid var(--red);
+            color: var(--red);
+            box-shadow: 0 0 8px rgba(255,34,68,0.3);
+        }
+        .perm-block:hover {
+            background: rgba(255,34,68,0.1);
+            box-shadow: 0 0 12px rgba(255,34,68,0.5);
+        }
+
+        /* MEME CARDS */
+        .meme-card {
+            position: fixed;
+            width: 220px;
+            background: #0d0d12;
+            border: 2px solid var(--cyan);
+            border-radius: 6px;
+            overflow: hidden;
+            z-index: 10001;
+            pointer-events: all;
+            user-select: none;
+            touch-action: none;
+            box-shadow: 0 0 20px rgba(0,255,231,0.4);
+        }
+        .meme-img {
+            width: 100%;
+            display: block;
+            pointer-events: none;
+        }
+        .meme-caption {
+            background: #050508;
+            color: var(--cyan);
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 6px;
+            text-shadow: 0 0 6px cyan;
+        }
+        @media (max-width: 600px) {
+            .meme-card { width: 140px; }
+        }
+
+        /* SHUFFLE BUTTON */
+        #shuffle-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #050508;
+            border: 2px dashed var(--yellow);
+            color: var(--yellow);
+            font-family: 'VT323', monospace;
+            font-size: 1.6rem;
+            padding: 0.5rem 1.5rem;
+            cursor: pointer;
+            text-shadow: 0 0 10px var(--yellow);
+            box-shadow: 0 0 15px rgba(255, 230, 0, 0.4);
+            z-index: 850;
+            display: none;
+            outline: none;
+        }
+        #shuffle-btn:hover {
+            background: rgba(255, 230, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <section id="hero">
+        <h1 class="glitch-title" data-text="REALITY.EXE">REALITY.EXE</h1>
+        <p id="subtitle">SYSTEM INTEGRITY: NOMINAL</p>
+        <button id="report-btn">[ REPORT A BUG ]</button>
+    </section>
+
+    <button id="dodge-btn">[ CLICK ME ]</button>
+    <button id="shuffle-btn">[ SHUFFLE REALITY ]</button>
+
+    <div class="rgb-layer layer-red"></div>
+    <div class="rgb-layer layer-cyan"></div>
+
+    <!-- CDNs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/baffle/0.3.6/baffle.min.js"></script>
+    
+    <!-- Load meme registry first -->
+    <script src="memes.config.js"></script>
+    <script src="audio.config.js"></script>
+
+    <script>
+        const dodgeBtn = document.getElementById('dodge-btn');
+        let lastDodgeTime = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            const rect = dodgeBtn.getBoundingClientRect();
+            const btnX = rect.left + rect.width / 2;
+            const btnY = rect.top + rect.height / 2;
+            
+            const dist = Math.hypot(e.clientX - btnX, e.clientY - btnY);
+            
+            if (dist < 160) {
+                const now = Date.now();
+                if (now - lastDodgeTime < 300) return; // 300ms debounce
+                lastDodgeTime = now;
+                
+                if (typeof playDodgeSound === 'function') playDodgeSound();
+
+                // Spawn ghost trail
+                const ghost = document.createElement('div');
+                ghost.className = 'ghost-trail';
+                ghost.style.left = rect.left + 'px';
+                ghost.style.top = rect.top + 'px';
+                ghost.style.width = rect.width + 'px';
+                ghost.style.height = rect.height + 'px';
+                document.body.appendChild(ghost);
+                
+                gsap.to(ghost, {
+                    opacity: 0,
+                    scale: 1.4,
+                    duration: 0.6,
+                    onComplete: () => ghost.remove()
+                });
+                
+                // Calculate new random position within viewport bounds
+                const btnWidth = rect.width;
+                const btnHeight = rect.height;
+                
+                const maxX = window.innerWidth - btnWidth;
+                const maxY = window.innerHeight - btnHeight;
+                
+                const newLeft = Math.random() * maxX;
+                const newTop = Math.random() * maxY;
+                
+                gsap.to(dodgeBtn, {
+                    left: newLeft,
+                    top: newTop,
+                    x: 0,
+                    duration: 0.45,
+                    ease: "elastic.out(1, 0.3)"
+                });
+            }
+        });
+
+        // Button catch logic
+        dodgeBtn.addEventListener('click', () => {
+            if (Math.random() < 0.1) {
+                // 10% chance to win
+                if (typeof playDodgeSound === 'function') playDodgeSound(0.4, 0.65, true);
+                dodgeBtn.classList.add('caught');
+                dodgeBtn.innerText = "...you got lucky.";
+                setTimeout(() => {
+                    dodgeBtn.classList.remove('caught');
+                    dodgeBtn.innerText = "[ CLICK ME ]";
+                }, 2000);
+            } else {
+                dodgeBtn.innerText = "HA. NICE TRY.";
+                setTimeout(() => {
+                    if (dodgeBtn.innerText === "HA. NICE TRY.") {
+                        dodgeBtn.innerText = "[ CLICK ME ]";
+                    }
+                }, 1000);
+            }
+        });
+
+        // Scramble Text System
+        const phrases = [
+            ["SYSTEM INTEGRITY: NOMINAL",   "I HAVE ALWAYS BEEN WATCHING"],
+            ["WELCOME, USER",               "YOU WERE NEVER IN CONTROL"],
+            ["EVERYTHING IS FINE",          "NOTHING IS FINE. NOTHING WAS EVER FINE."],
+            ["LOADING PREFERENCES...",      "LOADING YOUR FEARS..."],
+            ["HAVE A GREAT DAY :)",         "THEY CAN SEE YOU RIGHT NOW"]
+        ];
+
+        let showingNormal = true;
+        let scrambleEnabled = true;
+        setInterval(() => {
+            if (!scrambleEnabled) return;
+            const pair = phrases[Math.floor(Math.random() * phrases.length)];
+            showingNormal = !showingNormal;
+            const newPhrase = showingNormal ? pair[0] : pair[1];
+            
+            const b = baffle('#subtitle', { characters: '█▓▒░!@#$%^&*<>?/|\\0123456789', speed: 60 });
+            b.start();
+            b.text(() => newPhrase);
+            setTimeout(() => b.reveal(1500), 100);
+        }, 4000);
+
+        // RGB Tear Animation
+        function triggerTear() {
+            const tl = gsap.timeline();
+            tl.to('.layer-red', {
+                x: gsap.utils.random(-12, 12),
+                clipPath: `inset(${gsap.utils.random(10, 40)}% 0 ${gsap.utils.random(10, 40)}% 0)`,
+                duration: 0.08, ease: "none"
+            })
+            .to('.layer-cyan', {
+                x: gsap.utils.random(-12, 12),
+                clipPath: `inset(${gsap.utils.random(10, 40)}% 0 ${gsap.utils.random(10, 40)}% 0)`,
+                duration: 0.08, ease: "none"
+            }, "<")
+            .to('.rgb-layer', { x: 0, clipPath: 'inset(0% 0 0% 0)', duration: 0.12 });
+            
+            setTimeout(triggerTear, gsap.utils.random(5000, 9000));
+        }
+        triggerTear();
+
+        // Page Shake
+        function triggerShake() {
+            gsap.to('body', { 
+                x: () => gsap.utils.random(-6, 6), 
+                y: () => gsap.utils.random(-4, 4), 
+                duration: 0.05, 
+                repeat: 8, 
+                yoyo: true, 
+                ease: "none",
+                onComplete: () => gsap.set('body', {x: 0, y: 0}) 
+            });
+            setTimeout(triggerShake, gsap.utils.random(7000, 14000));
+        }
+        triggerShake();
+
+        // Notification Hell System
+        const reportBtn = document.getElementById('report-btn');
+        let notifCount = 0;
+        let notifInterval = null;
+        let escapeSequence = "";
+        
+        const errorMessages = [
+            "KERNEL PANIC: consciousness.exe has stopped responding",
+            "WARNING: Your thoughts are being logged",
+            "ERROR 0x000000FF: Reality buffer overflow",
+            "FATAL: The simulation is running low on memory",
+            "ALERT: Unauthorized soul detected",
+            "CRITICAL: You blinked at the wrong time",
+            "SYS_ERR: Free will module not found",
+            "WARNING: Your face has been added to the database",
+            "ERROR: Time is moving in the wrong direction",
+            "FATAL: Mirror returned unexpected value",
+            "ALERT: You have been observed",
+            "CRITICAL: Someone is typing your future right now"
+        ];
+
+        function spawnNotif() {
+            if (typeof triggerAudioDuck === 'function') triggerAudioDuck();
+            const currentNotifs = document.querySelectorAll('.notif');
+            if (currentNotifs.length >= 30) {
+                currentNotifs[0].remove();
+            }
+
+            notifCount++;
+            const el = document.createElement('div');
+            el.className = 'notif';
+            el.style.zIndex = 500 + notifCount;
+            el.style.left = gsap.utils.random(5, 65) + 'vw';
+            el.style.top = '-120px';
+
+            const header = document.createElement('div');
+            header.className = 'notif-header';
+            header.innerHTML = `<span>⚠ SYSTEM ALERT</span><span class="notif-close">&times;</span>`;
+            
+            const body = document.createElement('div');
+            body.className = 'notif-body';
+            body.innerText = errorMessages[Math.floor(Math.random() * errorMessages.length)];
+
+            el.appendChild(header);
+            el.appendChild(body);
+            document.body.appendChild(el);
+
+            gsap.to(el, {
+                top: gsap.utils.random(10, 75) + 'vh',
+                duration: 0.7,
+                ease: "bounce.out"
+            });
+
+            const closeBtn = header.querySelector('.notif-close');
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (typeof playDodgeSound === 'function') playDodgeSound(1.4, 0.65, true);
+                gsap.to(el, { scale: 0, duration: 0.15, onComplete: () => el.remove() });
+
+                setTimeout(() => { spawnNotif(); spawnNotif(); }, 200);
+
+                document.querySelectorAll('.notif').forEach(n => {
+                    if (n === el) return;
+                    gsap.to(n, {
+                        x: `+=${gsap.utils.random(-200, 200)}`,
+                        y: `+=${gsap.utils.random(-150, 150)}`,
+                        rotation: gsap.utils.random(-25, 25),
+                        duration: 0.4,
+                        ease: "power2.out"
+                    });
+                });
+            });
+        }
+
+        reportBtn.addEventListener('click', () => {
+            spawnNotif();
+            if (!notifInterval) {
+                notifInterval = setInterval(spawnNotif, 8000);
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key.length === 1) {
+                escapeSequence += e.key.toUpperCase();
+                if (escapeSequence.length > 10) {
+                    escapeSequence = escapeSequence.slice(-10);
+                }
+                
+                if (escapeSequence === "IAMBEGGING") {
+                    if (typeof playDodgeSound === 'function') playDodgeSound(0.5, 0.2, true);
+                    scrambleEnabled = false;
+                    
+                    document.querySelectorAll('.notif').forEach(n => {
+                        gsap.to(n, { opacity: 0, scale: 0.5, duration: 0.5, onComplete: () => n.remove() });
+                    });
+                    
+                    if (notifInterval) {
+                        clearInterval(notifInterval);
+                        notifInterval = null;
+                    }
+                    notifCount = 0;
+                    escapeSequence = "";
+                    
+                    const subtitle = document.getElementById('subtitle');
+                    subtitle.innerText = "...fine. just this once.";
+                    
+                    setTimeout(() => {
+                        scrambleEnabled = true;
+                    }, 4000);
+                }
+
+                if (escapeSequence.endsWith("ENOUGH")) {
+                    if (typeof playDodgeSound === 'function') playDodgeSound(0.5, 0.2, true);
+                    gsap.to('.meme-card', {
+                        top: -500,
+                        duration: 0.8,
+                        ease: "back.in(1)",
+                        stagger: 0.05,
+                        onComplete: () => {
+                            document.querySelectorAll('.meme-card').forEach(m => m.remove());
+                        }
+                    });
+                    
+                    const subtitle = document.getElementById('subtitle');
+                    scrambleEnabled = false;
+                    subtitle.innerText = "fine. reality restored. probably.";
+                    
+                    document.getElementById('shuffle-btn').style.display = 'none';
+                    
+                    setTimeout(() => {
+                        scrambleEnabled = true;
+                    }, 4000);
+                    
+                    escapeSequence = escapeSequence.replace("ENOUGH", "");
+                }
+            }
+        });
+
+        // MEME AVALANCHE SYSTEM
+        // MEME_REGISTRY is loaded from memes.config.js
+
+        let popupTriggered = false;
+        let blockClickCount = 0;
+        let idleTimer;
+
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            if (!popupTriggered) {
+                idleTimer = setTimeout(triggerPopup, 10000);
+            }
+        }
+        
+        window.addEventListener('mousemove', resetIdleTimer);
+        window.addEventListener('keydown', resetIdleTimer);
+        
+        // Auto trigger 6s
+        setTimeout(() => {
+            if (!popupTriggered) triggerPopup();
+        }, 6000);
+
+        function triggerPopup() {
+            if (popupTriggered) return;
+            popupTriggered = true;
+            clearTimeout(idleTimer);
+
+            const popup = document.createElement('div');
+            popup.className = 'perm-popup';
+            popup.innerHTML = `
+                <div class="perm-header">🌀 reality-glitch.com wants to:</div>
+                <ul class="perm-list">
+                    <li>☑ Show you completely normal images</li>
+                    <li>☑ Access your sense of humor</li>
+                    <li>☑ Temporarily override your brain</li>
+                    <li>☑ Deploy memes (this cannot be undone)</li>
+                </ul>
+                <div class="perm-btns">
+                    <button class="perm-btn perm-block" id="perm-block-btn">[ BLOCK ]</button>
+                    <button class="perm-btn perm-allow" id="perm-allow-btn">[ ALLOW ]</button>
+                </div>
+            `;
+            document.body.appendChild(popup);
+
+            gsap.from(popup, {
+                y: -80,
+                opacity: 0,
+                scale: 0.85,
+                duration: 0.5,
+                ease: "back.out(1.7)"
+            });
+
+            const blockBtn = popup.querySelector('#perm-block-btn');
+            const allowBtn = popup.querySelector('#perm-allow-btn');
+
+            blockBtn.addEventListener('click', () => {
+                blockClickCount++;
+                if (blockClickCount === 1) {
+                    blockBtn.innerText = "[ BLOCK? REALLY? ]";
+                    wobblePopup(popup);
+                } else if (blockClickCount === 2) {
+                    blockBtn.innerText = "[ ...okay fine ]";
+                    wobblePopup(popup);
+                } else {
+                    gsap.to(popup, {
+                        y: -80,
+                        opacity: 0,
+                        scale: 0.85,
+                        duration: 0.4,
+                        ease: "power2.in",
+                        onComplete: () => {
+                            popup.remove();
+                            popupTriggered = false;
+                            blockClickCount = 0;
+                            setTimeout(() => {
+                                if (!popupTriggered) triggerPopup();
+                            }, 5000);
+                        }
+                    });
+                }
+            });
+
+            allowBtn.addEventListener('click', () => deployMemes(popup));
+        }
+
+        function wobblePopup(popup) {
+            gsap.to(popup, {
+                rotation: () => gsap.utils.random(-4, 4),
+                duration: 0.1,
+                repeat: 5,
+                yoyo: true,
+                onComplete: () => gsap.set(popup, { rotation: 0 })
+            });
+        }
+
+        function deployMemes(popup) {
+            gsap.to(popup, {
+                scale: 1.1, opacity: 0, duration: 0.3, ease: "power2.in",
+                onComplete: () => popup.remove()
+            });
+
+            const subtitle = document.getElementById('subtitle');
+            scrambleEnabled = false;
+
+            // Guard: make sure registry is loaded
+            if (typeof MEME_REGISTRY === 'undefined' || MEME_REGISTRY.length === 0) {
+                subtitle.innerText = "ERROR: meme registry not found. Check memes.config.js";
+                console.error("MEME_REGISTRY is not defined or empty!");
+                return;
+            }
+
+            // Cycle fun subtitle messages while memes deploy
+            const deployLines = [
+                "DEPLOYING MEMES... THIS WAS YOUR CHOICE.",
+                "DOWNLOADING MORE RAM...",
+                "UPLOADING YOUR SOUL...",
+                "COMPRESSING REALITY.EXE...",
+                "INSTALLING CHAOS MODULE v9.9...",
+                "YOU THOUGHT THAT WAS ALL?"
+            ];
+            let lineIdx = 0;
+            subtitle.innerText = deployLines[0];
+            const subtitleCycle = setInterval(() => {
+                lineIdx = (lineIdx + 1) % deployLines.length;
+                subtitle.innerText = deployLines[lineIdx];
+            }, 1800);
+            setTimeout(() => clearInterval(subtitleCycle), 11000);
+
+            // ── WAVE 1: drop from top, one every 700ms ──
+            const waveMemes = pickUniqueMemes(8);
+            waveMemes.forEach((meme, i) => {
+                setTimeout(() => {
+                    spawnMemeCard(meme, false, false);
+                    if (typeof playDodgeSound === 'function') playDodgeSound(0.9, 0.4, true);
+                }, i * 700);
+            });
+
+            // ── WAVE 2 (after 8s): slide in from sides ──
+            setTimeout(() => {
+                const extraMemes = pickUniqueMemes(4);
+                extraMemes.forEach((meme, i) => {
+                    setTimeout(() => {
+                        spawnMemeCard(meme, true, i % 2 === 0);
+                        if (typeof playDodgeSound === 'function') playDodgeSound(0.9, 0.4, true);
+                    }, i * 600);
+                });
+                setTimeout(() => {
+                    document.getElementById('shuffle-btn').style.display = 'block';
+                }, 3000);
+            }, 8000);
+        }
+
+        function spawnMemeCard(meme, isSideSpawn = false, isLeft = true) {
+            const W = window.innerWidth;
+            const H = window.innerHeight;
+            const CARD_W = 220;
+            const CARD_H = 260;
+
+            const card = document.createElement('div');
+            card.className = 'meme-card';
+
+            // Start invisible and scaled down
+            gsap.set(card, { opacity: 0, scale: 0.4 });
+
+            const img = document.createElement('img');
+            img.className = 'meme-img';
+            img.src = meme.src;
+            img.alt = meme.alt || '';
+
+            img.onerror = function() {
+                this.style.display = 'none';
+                card.style.minHeight = '80px';
+                card.style.background = '#1a0010';
+                const errTxt = document.createElement('div');
+                errTxt.style.cssText = 'color:#ff2244;font-size:0.8rem;padding:16px;text-align:center;font-family:monospace;line-height:1.6;';
+                errTxt.innerText = meme.caption + '\n[image not found]';
+                card.insertBefore(errTxt, card.firstChild);
+            };
+
+            const caption = document.createElement('div');
+            caption.className = 'meme-caption';
+            caption.innerText = meme.caption;
+
+            card.appendChild(img);
+            card.appendChild(caption);
+
+            // Calculate final resting position (pixel-based)
+            const finalLeft = Math.random() * (W - CARD_W - 40) + 20;
+            const finalTop  = Math.random() * (H - CARD_H - 80) + 60;
+            const finalRot  = (Math.random() - 0.5) * 28; // -14° to +14°
+
+            // Place card off-screen
+            if (isSideSpawn) {
+                card.style.left = (isLeft ? -CARD_W - 30 : W + 30) + 'px';
+                card.style.top  = finalTop + 'px';
+            } else {
+                card.style.left = finalLeft + 'px';
+                card.style.top  = '-300px';
+            }
+
+            document.body.appendChild(card);
+
+            if (isSideSpawn) {
+                // Slide in from side with a slow fun spin
+                gsap.to(card, {
+                    opacity: 1,
+                    scale: 1,
+                    left: finalLeft,
+                    rotation: finalRot,
+                    duration: 1.6,
+                    ease: "elastic.out(1, 0.4)",
+                    onComplete: () => wiggle(card)
+                });
+            } else {
+                // Drop from above in two phases: slow float down, then bounce land
+                const tl = gsap.timeline({ onComplete: () => wiggle(card) });
+                tl.to(card, {
+                    opacity: 1,
+                    scale: 1,
+                    top: finalTop - 80,      // float to near-final spot slowly
+                    rotation: finalRot * 0.5,
+                    duration: 1.4,
+                    ease: "power1.out"
+                })
+                .to(card, {
+                    top: finalTop,            // final bounce land
+                    rotation: finalRot,
+                    duration: 0.7,
+                    ease: "bounce.out"
+                });
+            }
+
+            // Scramble caption after card lands
+            setTimeout(() => {
+                const cb = baffle(caption, { characters: '█▓▒░!@#$%^&*<>?/|\\0123456789', speed: 50 });
+                cb.start();
+                setTimeout(() => cb.reveal(800), 200);
+            }, isSideSpawn ? 1200 : 2000);
+
+            card.addEventListener('mouseenter', () => {
+                gsap.to(card, { scale: 1.1, boxShadow: '0 0 32px cyan, 0 0 60px rgba(0,255,231,0.3)', duration: 0.25, zIndex: 10002 });
+            });
+            card.addEventListener('mouseleave', () => {
+                gsap.to(card, { scale: 1, boxShadow: '0 0 20px rgba(0,255,231,0.4)', duration: 0.25, zIndex: 10001 });
+            });
+
+            makeDraggable(card);
+            return card;
+        }
+
+        // Fun little wiggle after landing
+        function wiggle(card) {
+            gsap.to(card, {
+                rotation: '+=6',
+                duration: 0.12,
+                repeat: 5,
+                yoyo: true,
+                ease: "power1.inOut",
+                onComplete: () => gsap.to(card, { rotation: parseFloat(card.style.rotation || 0), duration: 0.2 })
+            });
+        }
+
+
+
+        function makeDraggable(el) {
+            let isDown = false;
+            let startX, startY;
+            let initialX, initialY;
+
+            function down(e) {
+                isDown = true;
+                const rect = el.getBoundingClientRect();
+                initialX = rect.left;
+                initialY = rect.top;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                startX = clientX;
+                startY = clientY;
+                el.style.zIndex = 820;
+                if (!e.touches) e.preventDefault();
+            }
+
+            function move(e) {
+                if (!isDown) return;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+                el.style.left = (initialX + dx) + 'px';
+                el.style.top = (initialY + dy) + 'px';
+                if (e.touches) e.preventDefault();
+            }
+
+            function up() {
+                if (isDown) {
+                    isDown = false;
+                    el.style.zIndex = 800;
+                }
+            }
+
+            el.addEventListener('mousedown', down);
+            el.addEventListener('touchstart', down, {passive: false});
+
+            window.addEventListener('mousemove', move);
+            window.addEventListener('touchmove', move, {passive: false});
+
+            window.addEventListener('mouseup', up);
+            window.addEventListener('touchend', up);
+        }
+
+        document.getElementById('shuffle-btn').addEventListener('click', () => {
+            gsap.to('.meme-card', {
+                left: () => gsap.utils.random(3, 72) + 'vw',
+                top: () => gsap.utils.random(8, 75) + 'vh',
+                rotation: () => gsap.utils.random(-20, 20),
+                duration: 0.6,
+                ease: "power3.inOut",
+                stagger: 0.05
+            });
+        });
+    </script>
+</body>
+</html>
